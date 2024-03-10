@@ -1,0 +1,12 @@
+[package]
+name = "gtrepo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.2", features = ["cargo", "derive"] }
+url = "2.5.0"
+git-lib = { git = "http://marconi/gitea/psobolik/git-lib" }
+gitea-api = { git = "http://marconi/gitea/psobolik/gitea-api" }
+tokio = { version = "1.36.0", features = ["rt", "rt-multi-thread", "macros"] }
+open = "5.1.2"
