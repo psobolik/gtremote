@@ -3,10 +3,9 @@
  * Created 2024-03-09
  */
 
-use crate::parameters_error::ParametersError;
 use url::Url;
 
-use crate::util::{prompt_for_filter, prompt_for_gitea_url};
+use crate::parameters::{prompt_for_filter, prompt_for_gitea_url, ParametersError};
 
 #[derive(Debug)]
 pub struct ListParameters {

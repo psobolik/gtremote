@@ -1,9 +1,9 @@
 /*
  * Copyright (c) 2024 Paul Sobolik
- * Created 2024-03-08
+ * Created 2024-03-10
  */
 
-use crate::parameters_error::ParametersError;
+use crate::parameters::ParametersError;
 use git_lib::GitLib;
 use std::io::{BufRead, StdinLock, StdoutLock, Write};
 use std::path::PathBuf;
@@ -22,7 +22,7 @@ pub fn prompt_for_path(
         path.clone()
     } else {
         // Prompt for the path if it wasn't specified
-        // Use the current directory as default path
+        // Suggest the current directory as the default
         let default_path = std::env::current_dir().unwrap();
         let value = prompt_for_value(
             PATH_PROMPT,
@@ -34,7 +34,7 @@ pub fn prompt_for_path(
         PathBuf::from(value)
     };
 
-    // Use GitLib to get the top-level Git folder for the path
+    // Return the top-level Git folder of the specified path
     // (Fails if the path is not in a Git repository)
     path = GitLib::top_level(Some(&path))?;
     Ok(path)
@@ -53,7 +53,7 @@ pub fn prompt_for_gitea_url(
         gitea_url.clone()
     } else {
         // Prompt for the Gitea repository URL it wasn't specified
-        // Use the environment variable as the default (if it exists)
+        // Suggest the value of the GITEA_URL environment variable as the default (if it exists)
         let default_gitea_url =
             Box::new(std::env::var("GITEA_URL").unwrap_or_else(|_| String::new())).leak();
         let value = prompt_for_value(GITEA_URL_PROMPT, default_gitea_url, bucket, stdin, stdout);
@@ -75,6 +75,7 @@ pub fn prompt_for_remote_name(
         remote_name.clone()
     } else {
         // Prompt for the remote name if it wasn't specified
+        // Suggest "origin" as the default
         prompt_for_value(REMOTE_NAME_PROMPT, "origin", bucket, stdin, stdout)
     };
     Ok(remote_name)
@@ -88,7 +89,7 @@ pub fn prompt_for_filter(
 ) -> Option<String> {
     const PROMPT: &str = "Filter";
     let filter = if let Some(filter) = filter {
-        // Display the filter if it was  specified
+        // Display the filter if it was specified
         display_value(PROMPT, filter);
         filter.clone()
     } else {

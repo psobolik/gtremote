@@ -9,7 +9,7 @@ use clap::{Parser, Subcommand};
 use url::Url;
 
 #[derive(Parser)]
-#[command(version, about, long_about = None)]
+#[command(version, about, long_about = None, author, arg_required_else_help = true)]
 pub struct CommandLineArguments {
     #[command(subcommand)]
     pub(crate) command: Option<Commands>,

@@ -9,21 +9,15 @@ use url::Url;
 
 use crate::{
     app_error::AppError,
-    browse_parameters::BrowseParameters,
     command_line_arguments::{CommandLineArguments, Commands},
-    create_parameters::CreateParameters,
     error_level::ErrorLevel,
-    list_parameters::ListParameters,
+    parameters::{BrowseParameters, CreateParameters, ListParameters},
 };
 
 mod app_error;
-mod browse_parameters;
 mod command_line_arguments;
-mod create_parameters;
 mod error_level;
-mod list_parameters;
-mod parameters_error;
-mod util;
+mod parameters;
 
 #[tokio::main]
 async fn main() -> ExitCode {

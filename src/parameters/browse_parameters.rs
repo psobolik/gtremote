@@ -1,9 +1,8 @@
 /*
  * Copyright (c) 2024 Paul Sobolik
- * Created 2024-03-09
+ * Created 2024-03-10
  */
-use crate::parameters_error::ParametersError;
-use crate::util::{prompt_for_path, prompt_for_remote_name};
+use crate::parameters::{prompt_for_path, prompt_for_remote_name, ParametersError};
 use std::path::PathBuf;
 
 #[derive(Debug)]

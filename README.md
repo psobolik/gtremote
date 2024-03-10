@@ -10,6 +10,8 @@ That means you'd want to specify all of the options if you were using this in a 
 ---
 `> gtrepo --help`
 ```
+A command line program to work with Gitea repositories
+
 Usage: gtrepo.exe [COMMAND]
 
 Commands:

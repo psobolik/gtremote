@@ -6,7 +6,7 @@ use std::fmt::{Debug, Display, Formatter};
 
 pub enum AppError {
     Api(gitea_api::api_error::ApiError),
-    Parameter(crate::parameters_error::ParametersError),
+    Parameter(crate::parameters::ParametersError),
     Other(String),
 }
 
@@ -33,8 +33,8 @@ impl From<gitea_api::api_error::ApiError> for AppError {
     }
 }
 
-impl From<crate::parameters_error::ParametersError> for AppError {
-    fn from(err: crate::parameters_error::ParametersError) -> AppError {
+impl From<crate::parameters::ParametersError> for AppError {
+    fn from(err: crate::parameters::ParametersError) -> AppError {
         AppError::Parameter(err)
     }
 }

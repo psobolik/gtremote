@@ -2,6 +2,9 @@
 name = "gtrepo"
 version = "0.1.0"
 edition = "2021"
+authors = ["Paul Sobolik <psobolik@zoho.com>"]
+description = "A command line program to work with Gitea repositories"
+license = "MIT"
 
 [dependencies]
 clap = { version = "4.5.2", features = ["cargo", "derive"] }
