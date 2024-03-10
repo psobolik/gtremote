@@ -37,6 +37,7 @@ pub enum Commands {
         #[arg(short, long)]
         remote_name: Option<String>,
     },
+    /// Create a remote repository and track it locally
     Create {
         /// Gitea URL
         #[arg(short('u'), long)]
