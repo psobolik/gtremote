@@ -4,7 +4,7 @@ use std::process::ExitCode;
 
 use clap::Parser;
 use git_lib::GitLib;
-use gitea_api::{CreateRepoOptions, GiteaApi, Repository, TrustModel};
+use gitea_api::{CreateRepoOptions, GiteaApi, Repository, SearchReposResult, TrustModel};
 use url::Url;
 
 use crate::{
@@ -93,44 +93,9 @@ async fn list(gitea_url: &Option<Url>, filter: &Option<String>) -> Result<(), Ap
                             println!("No matches");
                             Ok(())
                         } else {
-                            let full_name_width =
-                                result.repositories().iter().fold(0, |acc, repository| {
-                                    let len = repository.full_name.len();
-                                    if len > acc {
-                                        len
-                                    } else {
-                                        acc
-                                    }
-                                }) + 1;
-                            let clone_url_width =
-                                result.repositories().iter().fold(0, |acc, repository| {
-                                    let len = repository.clone_url.len();
-                                    if len > acc {
-                                        len
-                                    } else {
-                                        acc
-                                    }
-                                }) + 1;
-                            let description_width =
-                                result.repositories().iter().fold(0, |acc, repository| {
-                                    let len = if repository.description.is_empty() {
-                                        "Description"
-                                    } else {
-                                        repository.description.split('\n').fold("", |acc, line| {
-                                            if line.len() > acc.len() {
-                                                line
-                                            } else {
-                                                acc
-                                            }
-                                        })
-                                    }
-                                    .len();
-                                    if len > acc {
-                                        len
-                                    } else {
-                                        acc
-                                    }
-                                });
+                            let full_name_width = full_name_width(&result);
+                            let clone_url_width = clone_url_width(&result);
+                            let description_width = description_width(&result);
                             println!(
                                 "{:<full_name_width$} {:<clone_url_width$} Description",
                                 "Name", "Clone URL"
@@ -157,6 +122,60 @@ async fn list(gitea_url: &Option<Url>, filter: &Option<String>) -> Result<(), Ap
     }
 }
 
+fn full_name_width(search_repos_result: &SearchReposResult) -> usize {
+    search_repos_result
+        .repositories()
+        .iter()
+        .fold(0, |acc, repository| {
+            let len = repository.full_name.len();
+            if len > acc {
+                len
+            } else {
+                acc
+            }
+        })
+        + 1
+}
+
+fn clone_url_width(search_repos_result: &SearchReposResult) -> usize {
+    search_repos_result
+        .repositories()
+        .iter()
+        .fold(0, |acc, repository| {
+            let len = repository.clone_url.len();
+            if len > acc {
+                len
+            } else {
+                acc
+            }
+        })
+        + 1
+}
+
+fn description_width(search_repos_result: &SearchReposResult) -> usize {
+    search_repos_result
+        .repositories()
+        .iter()
+        .fold(0, |acc, repository| {
+            let len = if repository.description.is_empty() {
+                "Description"
+            } else {
+                repository.description.split('\n').fold("", |acc, line| {
+                    if line.len() > acc.len() {
+                        line
+                    } else {
+                        acc
+                    }
+                })
+            }
+            .len();
+            if len > acc {
+                len
+            } else {
+                acc
+            }
+        })
+}
 #[allow(clippy::too_many_arguments)]
 async fn create(
     path: &Option<PathBuf>,
