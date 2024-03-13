@@ -81,28 +81,6 @@ pub fn prompt_for_remote_name(
     Ok(remote_name)
 }
 
-pub fn prompt_for_filter(
-    filter: &Option<String>,
-    bucket: &mut String,
-    stdin: &mut StdinLock,
-    stdout: &mut StdoutLock,
-) -> Option<String> {
-    const PROMPT: &str = "Filter";
-    let filter = if let Some(filter) = filter {
-        // Display the filter if it was specified
-        display_value(PROMPT, filter);
-        filter.clone()
-    } else {
-        // Prompt for the filter if it wasn't specified
-        prompt_for_value(PROMPT, "", bucket, stdin, stdout)
-    };
-    if filter.is_empty() {
-        None
-    } else {
-        Some(filter)
-    }
-}
-
 pub fn prompt_for_value(
     prompt: &str,
     default: &str,
