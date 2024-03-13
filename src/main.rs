@@ -1,22 +1,25 @@
-use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Parser;
 use git_lib::GitLib;
-use gitea_api::{CreateRepoOptions, GiteaApi, Repository, SearchReposResult, TrustModel};
+use gitea_api::{CreateRepoOptions, GiteaApi, Repository, TrustModel};
 use url::{ParseError, Url};
 
+use crate::browse::browse;
+use crate::list::list;
 use crate::{
     app_error::AppError,
     command_line_arguments::{CommandLineArguments, Commands},
     error_level::ErrorLevel,
-    parameters::{BrowseParameters, CreateParameters, ListParameters},
+    parameters::CreateParameters,
 };
 
 mod app_error;
+mod browse;
 mod command_line_arguments;
 mod error_level;
+mod list;
 mod parameters;
 
 #[tokio::main]
@@ -82,112 +85,6 @@ fn gitea_url_ev() -> Result<Url, ParseError> {
     let gitea_url_str =
         Box::new(std::env::var("GITEA_URL").unwrap_or_else(|_| String::new())).leak();
     Url::parse(gitea_url_str)
-}
-
-async fn list(gitea_url: &Option<Url>, filter: &Option<String>) -> Result<(), AppError> {
-    // List command doesn't prompt for missing, but it will use the value in the GITEA_URL
-    // environment variable if it exists.
-    let gitea_url = match gitea_url {
-        Some(gitea_url) => gitea_url.to_owned(),
-        None => if let Ok(gitea_url) = gitea_url_ev() {
-            gitea_url
-        } else {
-            // The url ParseError is not very meaningful
-            return Err(AppError::from("Missing or invalid Gitea URL"))
-        }
-    };
-    let list_parameters = ListParameters::new(gitea_url.clone(), filter.clone());
-    let gitea_api = GiteaApi::new(list_parameters.gitea_url().as_str(), None, None);
-    match gitea_api
-        .search_repos(Option::from(list_parameters.filter()))
-        .await
-    {
-        Ok(result) => {
-            if result.ok() {
-                if result.repositories().is_empty() {
-                    println!("No matches");
-                    Ok(())
-                } else {
-                    let full_name_width = full_name_width(&result);
-                    let clone_url_width = clone_url_width(&result);
-                    let description_width = description_width(&result);
-                    println!(
-                        "{:<full_name_width$} {:<clone_url_width$} Description",
-                        "Name", "Clone URL"
-                    );
-                    println!(
-                        "{:=<full_name_width$} {:=<clone_url_width$} {:=<description_width$}",
-                        "", "", ""
-                    );
-                    for repository in result.repositories().iter() {
-                        println!(
-                            "{:<full_name_width$} {:<clone_url_width$} {}",
-                            repository.full_name, repository.clone_url, repository.description,
-                        );
-                    }
-                    Ok(())
-                }
-            } else {
-                Err(AppError::from("Failed to get repositories"))
-            }
-        }
-        Err(error) => Err(AppError::from(error)),
-    }
-}
-
-fn full_name_width(search_repos_result: &SearchReposResult) -> usize {
-    search_repos_result
-        .repositories()
-        .iter()
-        .fold(0, |acc, repository| {
-            let len = repository.full_name.len();
-            if len > acc {
-                len
-            } else {
-                acc
-            }
-        })
-        + 1
-}
-
-fn clone_url_width(search_repos_result: &SearchReposResult) -> usize {
-    search_repos_result
-        .repositories()
-        .iter()
-        .fold(0, |acc, repository| {
-            let len = repository.clone_url.len();
-            if len > acc {
-                len
-            } else {
-                acc
-            }
-        })
-        + 1
-}
-
-fn description_width(search_repos_result: &SearchReposResult) -> usize {
-    search_repos_result
-        .repositories()
-        .iter()
-        .fold(0, |acc, repository| {
-            let len = if repository.description.is_empty() {
-                "Description"
-            } else {
-                repository.description.split('\n').fold("", |acc, line| {
-                    if line.len() > acc.len() {
-                        line
-                    } else {
-                        acc
-                    }
-                })
-            }
-            .len();
-            if len > acc {
-                len
-            } else {
-                acc
-            }
-        })
 }
 #[allow(clippy::too_many_arguments)]
 async fn create(
@@ -274,35 +171,4 @@ fn create_repo_options(create_parameters: &CreateParameters) -> CreateRepoOption
         None,                                       // license: Option<String>,
         None,                                       // readme: Option<String>,
     )
-}
-fn browse(path: &Option<PathBuf>, remote_name: &Option<String>) -> Result<(), AppError> {
-    match BrowseParameters::prompt_for_missing(path, remote_name) {
-        Ok(browse_parameters) => {
-            match GitLib::remote_url(
-                browse_parameters.remote_name().as_str(),
-                Option::from(browse_parameters.path()),
-            ) {
-                Ok(remote_url) => {
-                    let ru = <String as AsRef<OsStr>>::as_ref(&remote_url);
-                    match open::that_detached(ru) {
-                        Ok(()) => {
-                            println!("Opened '{}'", remote_url);
-                            Ok(())
-                        }
-                        Err(error) => Err(AppError::from(format!(
-                            "Error opening '{}': {}",
-                            browse_parameters.remote_name(),
-                            error
-                        ))),
-                    }
-                }
-                Err(error) => Err(AppError::from(format!(
-                    "Error getting remote URL for '{}': {}",
-                    browse_parameters.remote_name(),
-                    error
-                ))),
-            }
-        }
-        Err(error) => Err(AppError::from(error)),
-    }
 }

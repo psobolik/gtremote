@@ -29,13 +29,13 @@ pub enum Commands {
     },
     /// Open remote repository URL in default browser
     Browse {
-        /// Repository path (default: current path)
+        /// Repository path [default: current path]
         #[arg(long)]
         path: Option<PathBuf>,
 
-        /// Remote name (default: 'origin')
-        #[arg(short, long)]
-        remote_name: Option<String>,
+        /// Remote name
+        #[arg(short, long, default_value = "origin")]
+        remote_name: String,
     },
     /// Create a remote repository and track it locally
     Create {
@@ -43,15 +43,15 @@ pub enum Commands {
         #[arg(short('u'), long)]
         gitea_url: Option<Url>,
 
-        /// Repository path (default: current path)
+        /// Repository path [default: current path]
         #[arg(long)]
         path: Option<PathBuf>,
 
-        /// Name of remote repository (default: 'origin')
+        /// Name of remote repository [default: 'origin']
         #[arg(short, long)]
         remote_name: Option<String>,
 
-        /// Repository name (default: name of current path's folder)
+        /// Repository name [default: name of current path's folder}
         #[arg(short, long)]
         gitea_name: Option<String>,
 
@@ -59,15 +59,15 @@ pub enum Commands {
         #[arg(short, long)]
         description: Option<String>,
 
-        /// Default branch (default: 'main')
+        /// Default branch [default: 'main'}
         #[arg(short('b'), long)]
         default_branch: Option<String>,
 
-        /// Should the repository be private? (default: false)
+        /// Should the repository be private? [default: false}
         #[arg(short, long)]
         private: Option<bool>,
 
-        /// Should the repository be a template? (default: false)
+        /// Should the repository be a template? [default: false}
         #[arg(short, long)]
         template: Option<bool>,
     },
