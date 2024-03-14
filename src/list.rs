@@ -4,7 +4,6 @@
  */
 
 use crate::app_error::AppError;
-use crate::gitea_url_ev;
 use gitea_api::{GiteaApi, SearchReposResult};
 use url::Url;
 
@@ -14,7 +13,9 @@ pub(crate) async fn list(gitea_url: &Option<Url>, filter: &Option<String>) -> Re
     let gitea_url = match gitea_url {
         Some(gitea_url) => gitea_url.to_owned(),
         None => {
-            if let Ok(gitea_url) = gitea_url_ev() {
+            let gitea_url_str =
+                Box::new(std::env::var("GITEA_URL").unwrap_or_else(|_| String::new())).leak();
+            if let Ok(gitea_url) = Url::parse(gitea_url_str) {
                 gitea_url
             } else {
                 // The url ParseError is not very meaningful
@@ -24,10 +25,7 @@ pub(crate) async fn list(gitea_url: &Option<Url>, filter: &Option<String>) -> Re
     };
     // let list_parameters = ListParameters::new(gitea_url.clone(), filter.clone());
     let gitea_api = GiteaApi::new(gitea_url.as_str(), None, None);
-    match gitea_api
-        .search_repos(Option::from(filter))
-        .await
-    {
+    match gitea_api.search_repos(Option::from(filter)).await {
         Ok(result) => {
             if result.ok() {
                 if result.repositories().is_empty() {

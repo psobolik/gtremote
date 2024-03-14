@@ -7,8 +7,9 @@ use std::fmt::{Debug, Display, Formatter};
 pub enum AppError {
     Url(url::ParseError),
     Api(gitea_api::api_error::ApiError),
-    Parameter(crate::parameters::ParametersError),
+    Parameter(crate::create::parameters_error::ParametersError),
     Other(String),
+    Io(std::io::Error),
 }
 
 impl Display for AppError {
@@ -18,6 +19,7 @@ impl Display for AppError {
             AppError::Api(error) => error.to_string(),
             AppError::Parameter(error) => error.to_string(),
             AppError::Other(error) => error.to_string(),
+            AppError::Io(error) => error.to_string(),
         };
         write!(f, "{}", str)
     }
@@ -35,8 +37,8 @@ impl From<gitea_api::api_error::ApiError> for AppError {
     }
 }
 
-impl From<crate::parameters::ParametersError> for AppError {
-    fn from(err: crate::parameters::ParametersError) -> AppError {
+impl From<crate::create::parameters_error::ParametersError> for AppError {
+    fn from(err: crate::create::parameters_error::ParametersError) -> AppError {
         AppError::Parameter(err)
     }
 }
@@ -57,4 +59,8 @@ impl From<&str> for AppError {
     fn from(err: &str) -> AppError {
         AppError::Other(err.to_string())
     }
+}
+
+impl From<std::io::Error> for AppError {
+    fn from(err: std::io::Error) -> AppError { AppError::Io(err) }
 }
