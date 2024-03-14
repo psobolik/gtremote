@@ -8,6 +8,7 @@ use std::fmt::{Debug, Display, Formatter};
 pub enum ParametersError {
     GitCommand(git_lib::git_command::error::Error),
     Url(url::ParseError),
+    Io(std::io::Error),
     Other(String),
 }
 
@@ -16,6 +17,7 @@ impl Display for ParametersError {
         let str = match self {
             ParametersError::GitCommand(error) => error.to_string(),
             ParametersError::Url(error) => error.to_string(),
+            ParametersError::Io(error) => error.to_string(),
             ParametersError::Other(error) => error.to_string(),
         };
         write!(f, "{}", str)
@@ -37,6 +39,12 @@ impl From<git_lib::git_command::error::Error> for ParametersError {
 impl From<url::ParseError> for ParametersError {
     fn from(err: url::ParseError) -> ParametersError {
         ParametersError::Url(err)
+    }
+}
+
+impl From<std::io::Error> for ParametersError {
+    fn from(err: std::io::Error) -> ParametersError {
+        ParametersError::Io(err)
     }
 }
 

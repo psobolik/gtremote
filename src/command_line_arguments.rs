@@ -43,11 +43,11 @@ pub enum Commands {
         #[arg(short('u'), long)]
         gitea_url: Option<Url>,
 
-        /// Repository path [default: current path]
+        /// Repository path [default: <current path>]
         #[arg(long)]
         path: Option<PathBuf>,
 
-        /// Name of remote repository [default: 'origin']
+        /// Name of remote repository [default: origin]
         #[arg(short, long)]
         remote_name: Option<String>,
 
@@ -59,16 +59,24 @@ pub enum Commands {
         #[arg(short, long)]
         description: Option<String>,
 
-        /// Default branch [default: 'main'}
+        /// Default branch [default: main]
         #[arg(short('b'), long)]
         default_branch: Option<String>,
 
-        /// Should the repository be private? [default: false}
-        #[arg(short, long)]
-        private: Option<bool>,
+        /// The repository should be private
+        #[arg(long, conflicts_with = "not_private")]
+        private: bool,
 
-        /// Should the repository be a template? [default: false}
-        #[arg(short, long)]
-        template: Option<bool>,
+        /// The repository should *not* be private (default)
+        #[arg(long, value_name = "not-private", conflicts_with = "private")]
+        not_private: bool,
+
+        /// The repository should be a template
+        #[arg(long, conflicts_with = "not_template")]
+        template: bool,
+
+        /// The repository should *not* be a template (default)
+        #[arg(long, value_name = "not-template", conflicts_with = "template")]
+        not_template: bool,
     },
 }

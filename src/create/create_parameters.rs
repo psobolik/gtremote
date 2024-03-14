@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use url::Url;
 
-use crate::create::parameters_error::ParametersError;
+use super::parameters_error::ParametersError;
 
 #[derive(Debug)]
 pub struct CreateParameters {
@@ -63,7 +63,7 @@ impl CreateParameters {
         let mut stdin = std::io::stdin().lock();
         let mut stdout = std::io::stdout().lock();
 
-        let path = maybe_prompt_for_path(path, &mut bucket, &mut stdin, &mut stdout);
+        let path = maybe_prompt_for_path(path, &mut bucket, &mut stdin, &mut stdout)?;
         bucket.clear();
 
         let gitea_url =
@@ -77,17 +77,20 @@ impl CreateParameters {
             &mut bucket,
             &mut stdin,
             &mut stdout,
-        );
+        )?;
         bucket.clear();
 
         let gitea_name = maybe_prompt_for_string(
             gitea_name,
-            path.file_name().unwrap().to_str().unwrap(),
+            path.file_name()
+                .unwrap_or_default()
+                .to_str()
+                .unwrap_or_default(),
             "Repository name",
             &mut bucket,
             &mut stdin,
             &mut stdout,
-        );
+        )?;
         bucket.clear();
 
         let description = maybe_prompt_for_string(
@@ -97,7 +100,7 @@ impl CreateParameters {
             &mut bucket,
             &mut stdin,
             &mut stdout,
-        );
+        )?;
         bucket.clear();
 
         let default_branch = maybe_prompt_for_string(
@@ -107,27 +110,27 @@ impl CreateParameters {
             &mut bucket,
             &mut stdin,
             &mut stdout,
-        );
+        )?;
         bucket.clear();
 
         let private = maybe_prompt_for_bool(
             private,
             false,
-            "Private? (true or false)",
+            "Private",
             &mut bucket,
             &mut stdin,
             &mut stdout,
-        );
+        )?;
         bucket.clear();
 
         let template = maybe_prompt_for_bool(
             template,
             false,
-            "Template? (true or false)",
+            "Template",
             &mut bucket,
             &mut stdin,
             &mut stdout,
-        );
+        )?;
         bucket.clear();
 
         Ok(CreateParameters {
@@ -148,24 +151,24 @@ fn maybe_prompt_for_path(
     bucket: &mut String,
     stdin: &mut StdinLock,
     stdout: &mut StdoutLock,
-) -> PathBuf {
+) -> Result<PathBuf, ParametersError> {
     const PATH_PROMPT: &str = "Repository path";
     if let Some(path) = path {
         // Display the path if it was  specified
-        display_value(PATH_PROMPT, path.to_str().unwrap());
-        path.clone()
+        display_value(PATH_PROMPT, path.to_str().unwrap_or_default());
+        Ok(path.clone())
     } else {
         // Prompt for the path if it wasn't specified
         // Suggest the current directory as the default
-        let default_path = std::env::current_dir().unwrap();
+        let default_path = std::env::current_dir().unwrap_or_default();
         let value = prompt_for_string(
             PATH_PROMPT,
-            default_path.to_str().unwrap(),
+            default_path.to_str().unwrap_or_default(),
             bucket,
             stdin,
             stdout,
-        );
-        PathBuf::from(value)
+        )?;
+        Ok(PathBuf::from(value))
     }
 }
 
@@ -183,9 +186,9 @@ fn maybe_prompt_for_gitea_url(
     } else {
         // Prompt for the Gitea repository URL it wasn't specified
         // Suggest the value of the GITEA_URL environment variable as the default (if it exists)
-        let default_gitea_url = 
+        let default_gitea_url =
             Box::new(std::env::var("GITEA_URL").unwrap_or_else(|_| String::new())).leak();
-        let value = prompt_for_string(GITEA_URL_PROMPT, default_gitea_url, bucket, stdin, stdout);
+        let value = prompt_for_string(GITEA_URL_PROMPT, default_gitea_url, bucket, stdin, stdout)?;
         match Url::parse(value.as_str()) {
             Ok(gitea_url) => Ok(gitea_url),
             Err(_) => Err(ParametersError::from("Missing or invalid Gitea URL")),
@@ -194,38 +197,49 @@ fn maybe_prompt_for_gitea_url(
 }
 
 fn maybe_prompt_for_string(
-    string_value: &Option<String>,
-    default_value: &str,
+    value: &Option<String>,
+    default: &str,
     prompt: &str,
     bucket: &mut String,
     stdin: &mut StdinLock,
     stdout: &mut StdoutLock,
-) -> String {
-    if let Some(string_value) = string_value {
+) -> Result<String, ParametersError> {
+    if let Some(value) = value {
         // Display the value if it was specified
-        display_value(prompt, string_value);
-        string_value.clone()
+        display_value(prompt, value);
+        Ok(value.clone())
     } else {
         // Prompt for the value if it wasn't specified
-        prompt_for_string(prompt, default_value, bucket, stdin, stdout)
+        Ok(prompt_for_string(prompt, default, bucket, stdin, stdout)?)
     }
 }
 
 fn maybe_prompt_for_bool(
-    bool_value: &Option<bool>,
+    value: &Option<bool>,
     default: bool,
     prompt: &str,
     bucket: &mut String,
     stdin: &mut StdinLock,
     stdout: &mut StdoutLock,
-) -> bool {
-    if let Some(bool_value) = bool_value {
-        display_value(prompt, default.to_string().as_str());
-        *bool_value
+) -> Result<bool, ParametersError> {
+    let true_str = true.to_string().to_lowercase();
+    let false_str = false.to_string().to_lowercase();
+
+    if let Some(value) = value {
+        // Display the value if it was specified
+        display_value(prompt, if *value { &true_str } else { &false_str });
+        Ok(*value)
     } else {
-        prompt_for_string(prompt, default.to_string().as_str(), bucket, stdin, stdout)
-            .to_lowercase()
-            == true.to_string().as_str()
+        // Prompt for the value if it wasn't specified
+        Ok(prompt_for_string(
+            format!("{prompt} ({true_str} or {false_str})").as_str(),
+            if default { &true_str } else { &false_str }.as_str(),
+            bucket,
+            stdin,
+            stdout,
+        )?
+        .to_lowercase()
+            == true_str)
     }
 }
 
@@ -235,19 +249,19 @@ fn prompt_for_string(
     bucket: &mut String,
     stdin: &mut StdinLock,
     stdout: &mut StdoutLock,
-) -> String {
+) -> Result<String, ParametersError> {
     let mut prompt_string = format!("➕ {prompt}");
     // let mut prompt_string = String::from(prompt);
     if !default.is_empty() {
         prompt_string.push_str(format!(" [default: {default}]").as_str());
     }
     // We do this because stdout may be buffered
-    write!(stdout, "{prompt_string}: ").expect("Write failed");
+    write!(stdout, "{prompt_string}: ")?;
     stdout.flush().expect("Write failed");
 
-    stdin.read_line(bucket).expect("Read Line failed");
+    stdin.read_line(bucket)?;
     let result = bucket.trim_end_matches('\n').trim_end_matches('\r');
-    if result.is_empty() { default } else { result }.to_string()
+    Ok(if result.is_empty() { default } else { result }.to_string())
 }
 
 fn display_value(prompt: &str, value: &str) {

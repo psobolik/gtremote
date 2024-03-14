@@ -29,7 +29,7 @@ pub(crate) async fn list(gitea_url: &Option<Url>, filter: &Option<String>) -> Re
         Ok(result) => {
             if result.ok() {
                 if result.repositories().is_empty() {
-                    println!("No matches");
+                    crate::print_info!("No matches");
                     Ok(())
                 } else {
                     let full_name_width = full_name_width(&result);

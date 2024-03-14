@@ -62,5 +62,7 @@ impl From<&str> for AppError {
 }
 
 impl From<std::io::Error> for AppError {
-    fn from(err: std::io::Error) -> AppError { AppError::Io(err) }
+    fn from(err: std::io::Error) -> AppError {
+        AppError::Io(err)
+    }
 }
