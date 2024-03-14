@@ -46,8 +46,8 @@ Open remote repository URL in default browser
 Usage: gtrepo.exe browse [OPTIONS]
 
 Options:
-      --path <PATH>                Repository path (default: current path)
-  -r, --remote-name <REMOTE_NAME>  Remote name (default: 'origin')
+      --path <PATH>                Repository path [default: current path]
+  -r, --remote-name <REMOTE_NAME>  Remote name [default: 'origin']
   -h, --help                       Print help
 ```
 ---
@@ -61,19 +61,19 @@ Options:
   -u, --gitea-url <GITEA_URL>
           Gitea URL
       --path <PATH>
-          Repository path (default: current path)
+          Repository path [default: current path]
   -r, --remote-name <REMOTE_NAME>
-          Name of remote repository (default: 'origin')
+          Name of remote repository [default: 'origin']
   -g, --gitea-name <GITEA_NAME>
-          Repository name (default: name of current path's folder)
+          Repository name [default: name of current path's folder}
   -d, --description <DESCRIPTION>
           Repository description
   -b, --default-branch <DEFAULT_BRANCH>
-          Default branch (default: 'main')
+          Default branch [default: 'main'}
   -p, --private <PRIVATE>
-          Should the repository be private? (default: false) [possible values: true, false]
+          Should the repository be private? [default: false} [possible values: true, false]
   -t, --template <TEMPLATE>
-          Should the repository be a template? (default: false) [possible values: true, false]
+          Should the repository be a template? [default: false} [possible values: true, false]
   -h, --help
           Print help
 ```
